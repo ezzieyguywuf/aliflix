@@ -1,0 +1,16 @@
+USER-SUPPLIED VALUES:
+persistence:
+  config:
+    accessMode: ReadWriteOnce
+    enabled: true
+    existingClaim: jellyfin-config
+  media:
+    accessMode: ReadWriteMany
+    enabled: true
+    existingClaim: downloads
+service:
+  port: 80
+  portName: http
+  type: LoadBalancer
+podLabels:
+  run-together: rsync-and-jellyfin
