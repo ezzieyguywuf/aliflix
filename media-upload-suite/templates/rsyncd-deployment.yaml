@@ -1,0 +1,60 @@
+{{- if .Values.rsyncd.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wolfgang-rsync-upload-suite.fullname" . }}-rsyncd
+  labels:
+    {{- include "wolfgang-rsync-upload-suite.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rsyncd
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "wolfgang-rsync-upload-suite.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: rsyncd
+  template:
+    metadata:
+      labels:
+        {{- include "wolfgang-rsync-upload-suite.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: rsyncd
+    spec:
+      {{- if .Values.rsyncd.affinity }}
+      affinity:
+        {{- toYaml .Values.rsyncd.affinity | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: rsyncd
+          securityContext:
+            {{- toYaml .Values.rsyncd.securityContext | nindent 12 }}
+          image: "{{ .Values.rsyncd.image.repository }}:{{ .Values.rsyncd.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.rsyncd.image.pullPolicy }}
+          command: ["/usr/bin/rsync"]
+          args:
+            - "--verbose"
+            - "--daemon"
+            - "--address=0.0.0.0"
+            - "--config=/etc/rsyncd.conf"
+            - "--no-detach"
+            - "--port={{ .Values.rsyncd.internalPort }}"
+          ports:
+            - name: rsync-port
+              containerPort: {{ .Values.rsyncd.internalPort }}
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: rsync-port
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: rsync-port
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.rsyncUploadPvcName }}
+{{- end }}

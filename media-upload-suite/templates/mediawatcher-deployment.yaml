@@ -1,0 +1,39 @@
+{{- if .Values.mediaWatcher.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wolfgang-rsync-upload-suite.fullname" . }}-mediawatcher
+  labels:
+    {{- include "wolfgang-rsync-upload-suite.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mediawatcher
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "wolfgang-rsync-upload-suite.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mediawatcher
+  template:
+    metadata:
+      labels:
+        {{- include "wolfgang-rsync-upload-suite.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mediawatcher
+    spec:
+      securityContext:
+        {{- toYaml .Values.mediaWatcher.podSecurityContext | nindent 8 }}
+      containers:
+        - name: watcher
+          image: "{{ .Values.mediaWatcher.image.repository }}:{{ .Values.mediaWatcher.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.mediaWatcher.image.pullPolicy }}
+          volumeMounts:
+            - name: rsync-upload-storage
+              mountPath: /mnt/uploads-from-rsync
+            - name: jellyfin-library-storage
+              mountPath: /mnt/jellyfin-media-library
+      volumes:
+        - name: rsync-upload-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.rsyncUploadPvcName }}
+        - name: jellyfin-library-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.jellyfinMediaPvcName }}
+{{- end }}

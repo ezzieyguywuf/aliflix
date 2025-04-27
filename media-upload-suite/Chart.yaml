@@ -1,0 +1,6 @@
+apiVersion: v2
+name: media-upload-suite
+description: A Helm chart for deploying an rsyncd service and a media watcher for uploading media to Jellyfin.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

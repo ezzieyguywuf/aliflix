@@ -1,0 +1,19 @@
+{{- if .Values.rsyncd.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wolfgang-rsync-upload-suite.fullname" . }}-rsyncd
+  labels:
+    {{- include "wolfgang-rsync-upload-suite.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rsyncd
+spec:
+  type: LoadBalancer
+  ports:
+    - port: {{ .Values.rsyncd.externalPort }}
+      targetPort: rsync-port
+      protocol: TCP
+      name: rsync-service
+  selector:
+    {{- include "wolfgang-rsync-upload-suite.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: rsyncd
+{{- end }}
